@@ -13,11 +13,14 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
     final BotConfig config;
+
     public TelegramBot(BotConfig botConfig){
         this.config = botConfig;
     }
@@ -61,9 +64,14 @@ public class TelegramBot extends TelegramLongPollingBot {
                     case "/get_currency":
                         showAllData(chatId);
                         break;
-                    default: sendMessage(chatId , "Command not Found");
+
+
+                    default:
+
+
                 }
             }
+
         }
         else if(message.hasText() || message.hasVoice()){
             long chatId = message.getChatId();
@@ -89,7 +97,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                         throw new RuntimeException(e);
                     }
                     break;
-                default: sendMessage(chatId , "Sorry command was not recognized");
+                default: forConvert(messageText , chatId);
                     UserDao dao = new UserDao();
                     User user = new User();
                     user.setFirstName(firstname);
@@ -100,43 +108,54 @@ public class TelegramBot extends TelegramLongPollingBot {
             }
         }
     }
+    private void writeMode(long chatId) throws IOException, TelegramApiException {
+        CurrencyService curService = new CurrencyService();
+        List<Currency> result = curService.getCurrencies(curService.date);
+        List<List<InlineKeyboardButton>> keyboardRows = new ArrayList<>();
+
+        for (Currency currency : result) {
+            InlineKeyboardButton button = InlineKeyboardButton.builder()
+                    .text(currency.getTitle())
+                    .callbackData(currency.getTitle()) // Описание передается в качестве callbackData
+                    .build();
+            List<InlineKeyboardButton> row = new ArrayList<>();
+            row.add(button);
+            keyboardRows.add(row);
+        }
+
+        execute(SendMessage.builder()
+                .text("Please select a currency:")
+                .chatId(chatId)
+                .replyMarkup(InlineKeyboardMarkup.builder().keyboard(keyboardRows).build())
+                .build()
+        );
 
 
-//    private void showAllData(long chatId) throws IOException {
-//        CurrencyService curService = new CurrencyService();
-//        List<Currency> result = curService.getCurrencies(curService.date);
-//        for(int i = 0 ; i < result.size() ; i++){
-//            try{
-//                sendMessage(chatId,(result.get(i).getTitle()+"="+result.get(i).getDescription()+"KZT"));
-//            }
-//            catch (Exception e){
-//                throw new RuntimeException(e);
-//            }
-//
-//        }
-//    }
-private void showAllData(long chatId) throws IOException, TelegramApiException {
-    CurrencyService curService = new CurrencyService();
-    List<Currency> result = curService.getCurrencies(curService.date);
-    List<List<InlineKeyboardButton>> keyboardRows = new ArrayList<>();
 
-    for (Currency currency : result) {
-        InlineKeyboardButton button = InlineKeyboardButton.builder()
-                .text(currency.getTitle())
-                .callbackData(currency.getDescription()) // Описание передается в качестве callbackData
-                .build();
-        List<InlineKeyboardButton> row = new ArrayList<>();
-        row.add(button);
-        keyboardRows.add(row);
     }
 
-    execute(SendMessage.builder()
-            .text("Please select a currency:")
-            .chatId(chatId)
-            .replyMarkup(InlineKeyboardMarkup.builder().keyboard(keyboardRows).build())
-            .build()
-    );
-}
+    private void showAllData(long chatId) throws IOException, TelegramApiException {
+        CurrencyService curService = new CurrencyService();
+        List<Currency> result = curService.getCurrencies(curService.date);
+        List<List<InlineKeyboardButton>> keyboardRows = new ArrayList<>();
+
+        for (Currency currency : result) {
+            InlineKeyboardButton button = InlineKeyboardButton.builder()
+                    .text(currency.getTitle())
+                    .callbackData(currency.getDescription()) // Описание передается в качестве callbackData
+                    .build();
+            List<InlineKeyboardButton> row = new ArrayList<>();
+            row.add(button);
+            keyboardRows.add(row);
+        }
+
+        execute(SendMessage.builder()
+                .text("Please select a currency:")
+                .chatId(chatId)
+                .replyMarkup(InlineKeyboardMarkup.builder().keyboard(keyboardRows).build())
+                .build()
+        );
+    }
 
     private void showAllUsers(long chatId){
         UserDao dao = new UserDao();
@@ -155,6 +174,9 @@ private void showAllData(long chatId) throws IOException, TelegramApiException {
         sendMessage(chatId,answer);
     }
 
+
+
+
     private void sendMessage(long chatId , String textToSend){
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
@@ -163,6 +185,41 @@ private void showAllData(long chatId) throws IOException, TelegramApiException {
             execute(message);
         }
         catch (TelegramApiException e){
+        }
+    }
+
+    public  void forConvert(String message , long chatId) throws IOException {
+        Pattern pattern = Pattern.compile("^(\\d+(\\.\\d+)?)\\s+([A-Z]{3})$");
+        Matcher matcher = pattern.matcher(message);
+
+        if (matcher.matches()) {
+            // Извлечение числа и валютного кода
+            String number = matcher.group(1);
+            String currencyCode = matcher.group(3);
+            CurrencyService curService = new CurrencyService();
+            List<Currency> result = curService.getCurrencies(curService.date);
+            double num = Double.parseDouble(number);
+            System.out.println(currencyCode);
+            if(currencyCode.equals("KZT")){
+                for(Currency currency : result){
+                    double currencyDesc = Double.parseDouble(currency.getDescription());
+                    sendMessage(chatId , String.valueOf(num/currencyDesc)+" "+currency.getTitle());
+                }
+            }
+            else{
+                for(Currency currency : result){
+                    if(currency.getTitle().equals(currencyCode)){
+                        double currencyDesc = Double.parseDouble(currency.getDescription());
+                        sendMessage(chatId , String.valueOf(num*currencyDesc)+" KZT");
+                        break;
+                    }
+
+                }
+            }
+
+            sendMessage(chatId, "YES, IT'S WORK");
+        } else {
+            sendMessage(chatId, "Command not Found");
         }
     }
 

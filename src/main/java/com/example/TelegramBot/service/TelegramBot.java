@@ -59,16 +59,16 @@ public class TelegramBot extends TelegramLongPollingBot {
             Optional <MessageEntity> commandEntity = message.getEntities().stream().filter(e->"bot_command".equals(e.getType())).findFirst();
             if(commandEntity.isPresent()){
                 long chatId = message.getChatId();
+                String firstname = message.getChat().getFirstName();
+                String lastname = message.getChat().getLastName();
+                String username = message.getChat().getUserName();
                 String command = message.getText();
+                saveDb(firstname,lastname,username,command);
                 switch (command){
                     case "/get_currency":
                         showAllData(chatId);
                         break;
-
-
-                    default:
-
-
+                    default: sendMessage(chatId , "wrong command");
                 }
             }
 
@@ -80,6 +80,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             String username = message.getChat().getUserName();
             String messageText = message.getText();
             Voice voice = message.getVoice();
+            saveDb(firstname,lastname,username,messageText);
             switch (messageText){
                 case "/start":
                     startCommandReceived(chatId , firstname);
@@ -98,15 +99,18 @@ public class TelegramBot extends TelegramLongPollingBot {
                     }
                     break;
                 default: forConvert(messageText , chatId);
-                    UserDao dao = new UserDao();
-                    User user = new User();
-                    user.setFirstName(firstname);
-                    user.setLastName(lastname);
-                    user.setUserName(username);
-                    user.setMessage(messageText);
-                    dao.save(user);
+
             }
         }
+    }
+    public void saveDb(String firstname , String lastname , String username , String messageText){
+        UserDao dao = new UserDao();
+        User user = new User();
+        user.setFirstName(firstname);
+        user.setLastName(lastname);
+        user.setUserName(username);
+        user.setMessage(messageText);
+        dao.save(user);
     }
     private void writeMode(long chatId) throws IOException, TelegramApiException {
         CurrencyService curService = new CurrencyService();

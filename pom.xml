@@ -17,12 +17,23 @@
 		<java.version>17</java.version>
 		<telegram.version>6.5.0</telegram.version>
 	</properties>
+
+
+
 	<dependencies>
 		<dependency>
 			<groupId>org.telegram</groupId>
 			<artifactId>telegrambots-spring-boot-starter</artifactId>
 			<version>${telegram.version}</version>
 		</dependency>
+
+
+
+
+
+
+
+
 
 
 
@@ -59,6 +70,14 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.jetbrains</groupId>
+			<artifactId>annotations</artifactId>
+			<version>RELEASE</version>
+			<scope>compile</scope>
+		</dependency>
+
+
 	</dependencies>
 
 	<build>

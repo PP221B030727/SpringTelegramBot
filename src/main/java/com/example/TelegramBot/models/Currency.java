@@ -25,8 +25,8 @@ public class Currency {
         this.title = title;
     }
 
-    public double getDescription() {
-        return description;
+    public String getDescription() {
+        return Double.toString(description);
     }
     public void setDescription(double description) {
         this.description = description;

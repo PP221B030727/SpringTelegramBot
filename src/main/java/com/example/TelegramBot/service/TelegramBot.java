@@ -2,14 +2,20 @@ package com.example.TelegramBot.service;
 
 import com.example.TelegramBot.config.BotConfig;
 import com.example.TelegramBot.dao.UserDao;
+import com.example.TelegramBot.models.Currency;
 import com.example.TelegramBot.models.User;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Audio;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.IOException;
 import java.util.List;
+
+
+
 
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
@@ -37,6 +43,14 @@ public class TelegramBot extends TelegramLongPollingBot {
             String lastname = update.getMessage().getChat().getLastName();
             String username = update.getMessage().getChat().getUserName();
             String messageText = update.getMessage().getText();
+            Audio x = update.getMessage().getAudio();
+
+            if(x!=null){
+                System.out.println("Hello world");
+                System.out.println(x.getFileId().toString());
+            }
+            System.out.println(x);
+
 
             switch (messageText){
                 case "/start":
@@ -45,6 +59,13 @@ public class TelegramBot extends TelegramLongPollingBot {
 
                 case "/users":
                     showAllUsers(chatId);
+                    break;
+                case "/data":
+                    try {
+                        showAllData(chatId);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     break;
                 default: sendMessage(chatId , "Sorry command was not recognized");
                 UserDao dao = new UserDao();
@@ -56,6 +77,21 @@ public class TelegramBot extends TelegramLongPollingBot {
                 dao.save(user);
             }
         }
+    }
+    private void showAllData(long chatId) throws IOException {
+        CurrencyService curService = new CurrencyService();
+        List<Currency> result = curService.getCurrencies(curService.date);
+        for(int i = 0 ; i < result.size() ; i++){
+            try{
+                sendMessage(chatId,(result.get(i).getTitle()+"="+result.get(i).getDescription()+"KZT"));
+            }
+            catch (Exception e){
+                throw new RuntimeException(e);
+            }
+
+        }
+
+
     }
     private void showAllUsers(long chatId){
         UserDao dao = new UserDao();

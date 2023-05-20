@@ -68,6 +68,11 @@ public class TelegramBot extends TelegramLongPollingBot {
                     case "/get_currency":
                         showAllData(chatId);
                         break;
+                    case "/start":
+                        sendMessage(chatId , "To get a list of exchange rates /get_currency");
+                        sendMessage(chatId , "In order to convert your number into other currencies, write the text like this: 123 RUB");
+
+                        break;
                     default: sendMessage(chatId , "wrong command");
                 }
             }
@@ -82,9 +87,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             Voice voice = message.getVoice();
             saveDb(firstname,lastname,username,messageText);
             switch (messageText){
-                case "/start":
-                    startCommandReceived(chatId , firstname);
-                    break;
+
 
                 case "/users":
                     showAllUsers(chatId);
@@ -203,7 +206,6 @@ public class TelegramBot extends TelegramLongPollingBot {
             CurrencyService curService = new CurrencyService();
             List<Currency> result = curService.getCurrencies(curService.date);
             double num = Double.parseDouble(number);
-            System.out.println(currencyCode);
             if(currencyCode.equals("KZT")){
                 for(Currency currency : result){
                     double currencyDesc = Double.parseDouble(currency.getDescription());
@@ -220,8 +222,6 @@ public class TelegramBot extends TelegramLongPollingBot {
 
                 }
             }
-
-            sendMessage(chatId, "YES, IT'S WORK");
         } else {
             sendMessage(chatId, "Command not Found");
         }

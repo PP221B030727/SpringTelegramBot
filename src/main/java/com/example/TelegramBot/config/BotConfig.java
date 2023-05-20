@@ -15,4 +15,13 @@ public class BotConfig {
     String botName;
     @Value("${bot.token}")
     String token;
+
+    @Value("${spring.datasource.url}")
+    String url;
+
+    @Value("${spring.datasource.username}")
+    String username;
+
+    @Value("${spring.datasource.password}")
+    String password;
 }

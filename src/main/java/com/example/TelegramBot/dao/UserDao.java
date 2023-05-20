@@ -9,7 +9,7 @@ import java.util.List;
 
 @Component
 public class UserDao {
-    private static final String URL = "jdbc:postgresql://localhost:5432/TelegramBotDB";
+    private static final String URL = "jdbc:postgresql://localhost:5432/postgres";
     private static final String USERNAME = "postgres";
     private static final String PASSWORD = "tatosu94";
     private static Connection connection;// Создается 1 раз
